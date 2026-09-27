@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steelwool Africa - Maintenance Management System</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1f2a44">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="toast" class="toast"></div>
+  <div id="loading-overlay" class="loading-overlay hidden"><div class="spinner"></div></div>
+
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="brand-mark-img" src="logo-mark.png" alt="Steelwool (Africa) Limited">
+        <img class="brand-full-img" src="logo-full.png" alt="Steelwool (Africa) Limited">
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">&#9632;</span> <span>Dashboard</span></button>
+        <button class="nav-item" data-view="issues"><span class="nav-icon">&#9888;</span> <span>Issue Log</span></button>
+        <button class="nav-item" data-view="pm"><span class="nav-icon">&#128197;</span> <span>Preventive Maintenance</span></button>
+        <button class="nav-item" data-view="machines"><span class="nav-icon">&#9881;</span> <span>Machines</span></button>
+        <button class="nav-item" data-view="staff"><span class="nav-icon">&#128101;</span> <span>Staff</span></button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">&#128196;</span> <span>Reports</span></button>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">&#9881;&#65039;</span> <span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer">v2.1 PWA &middot; Google Sheets DB</div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-title" id="view-title">Dashboard</div>
+        <div class="topbar-actions" id="view-actions">
+          <button class="btn btn-primary" id="btn-quick-new-issue">+ New Issue</button>
+        </div>
+      </header>
+
+      <div class="content" id="content">
+
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view">
+          <div class="kpi-grid" id="kpi-grid"></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Issues by Machine (Top 6)</div>
+              <div id="chart-category" class="chart-box"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Issues by Priority</div>
+              <div id="chart-priority" class="chart-box"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Issue Trend (last 6 months)</div>
+            <div id="chart-trend" class="chart-box chart-box-wide"></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Overdue &amp; Upcoming Preventive Maintenance</div>
+              <div id="pm-overdue-list" class="mini-list"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Recent Issues</div>
+              <div id="recent-issues-list" class="mini-list"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Scheduled Preventive Maintenance Logs</div>
+            <div class="mini-item-sub" style="margin-bottom:10px;">PM records with a status of "Scheduled" &mdash; click any log to open its full details.</div>
+            <div id="pm-scheduled-list" class="mini-list"></div>
+          </div>
+        </section>
+
+        <!-- ISSUE LOG -->
+        <section id="view-issues" class="view hidden">
+          <div class="filter-bar">
+            <input type="text" id="issue-search" class="search-input" placeholder="Search description, machine, ID...">
+            <select id="filter-status"><option value="All">All Statuses</option></select>
+            <select id="filter-priority"><option value="All">All Priorities</option></select>
+            <select id="filter-category"><option value="All">All Machines</option></select>
+            <input type="date" id="filter-from" title="From date">
+            <input type="date" id="filter-to" title="To date">
+            <button class="btn btn-ghost btn-small" id="btn-clear-issue-filters">Clear</button>
+            <button class="btn btn-ghost btn-small" id="btn-export-issues">Export CSV</button>
+          </div>
+          <div class="table-wrap scroll">
+            <table class="table" id="issues-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Reported</th><th>Machine</th><th>Fault</th>
+                  <th>Priority</th><th>Assigned To</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- PM -->
+        <section id="view-pm" class="view hidden">
+          <div class="filter-bar">
+            <input type="text" id="pm-search" class="search-input" placeholder="Search PM records...">
+            <select id="pm-filter-status"><option value="All">All Statuses</option></select>
+            <select id="pm-filter-category"><option value="All">All Machines</option></select>
+            <button class="btn btn-ghost btn-small" id="btn-new-pm">+ New PM Record</button>
+            <div class="legend">
+              <span class="dot dot-overdue"></span> Overdue
+              <span class="dot dot-due-soon"></span> Due within 7 days
+              <span class="dot dot-upcoming"></span> Upcoming
+            </div>
+          </div>
+          <div class="table-wrap scroll">
+            <table class="table" id="pm-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Machine</th><th>Task</th><th>Service Type</th>
+                  <th>Next Service</th><th>Team</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- MACHINES -->
+        <section id="view-machines" class="view hidden">
+          <div class="filter-bar">
+            <input type="text" id="machine-search" class="search-input" placeholder="Search machines...">
+            <select id="machine-filter-category"><option value="All">All Categories</option></select>
+            <button class="btn btn-ghost btn-small" id="btn-new-machine">+ Add Machine</button>
+          </div>
+          <div class="entity-grid" id="machines-grid"></div>
+        </section>
+
+        <!-- STAFF -->
+        <section id="view-staff" class="view hidden">
+          <div class="filter-bar">
+            <input type="text" id="staff-search" class="search-input" placeholder="Search staff...">
+            <select id="staff-filter-status"><option value="All">All Statuses</option></select>
+            <button class="btn btn-ghost btn-small" id="btn-new-staff">+ Add Staff</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="staff-table">
+              <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- REPORTS -->
+        <section id="view-reports" class="view hidden">
+          <div class="card card-clickable" data-summary="1" style="border-left:4px solid var(--accent);">
+            <div class="card-title">&#128202; Maintenance Summary Report</div>
+            <div class="mini-item-sub">
+              All resolved issues with root cause &amp; resolution detail, PM history,
+              top spare parts used and top root causes &mdash; print-ready.
+            </div>
+          </div>
+
+          <div class="card" style="border-left:4px solid var(--blue);">
+            <div class="card-title">&#128736;&#65039; Machine History Report</div>
+            <div class="mini-item-sub" style="margin-bottom:10px;">
+              Select a machine to see every issue and PM service ever logged against it, newest first.
+            </div>
+            <div class="filter-bar" style="margin-bottom:0;">
+              <select id="machine-history-select" style="min-width:260px;"><option value="">Select Machine...</option></select>
+              <button class="btn btn-primary btn-small" id="btn-machine-history">View History</button>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="card card-clickable" data-report="issues">
+              <div class="card-title">Issues Report</div>
+              <div class="mini-item-sub">All logged maintenance issues with status, priority and resolution.</div>
+            </div>
+            <div class="card card-clickable" data-report="pm">
+              <div class="card-title">Preventive Maintenance Report</div>
+              <div class="mini-item-sub">Full PM history and upcoming service schedule.</div>
+            </div>
+            <div class="card card-clickable" data-report="machine">
+              <div class="card-title">Machine Report</div>
+              <div class="mini-item-sub">Machine registry with category, location and status.</div>
+            </div>
+            <div class="card card-clickable" data-report="staff">
+              <div class="card-title">Staff Report</div>
+              <div class="mini-item-sub">Staff roster with role, department and status.</div>
+            </div>
+          </div>
+          <div class="card" id="report-output" style="display:none;">
+            <div class="report-actions no-print">
+              <button class="btn btn-ghost btn-small" id="btn-print-report">Print</button>
+            </div>
+            <div class="card-title" id="report-title"></div>
+            <div class="table-wrap scroll" id="report-content"></div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="view-settings" class="view hidden">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">System Settings</div>
+              <div id="settings-form"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Database Info</div>
+              <div id="database-info"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- GENERIC MODAL (reused for every entity form/detail view) -->
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="modal-title">Title</div>
+        <button id="modal-close" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
