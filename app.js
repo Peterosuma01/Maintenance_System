@@ -4,10 +4,10 @@
 const CONFIG = {
   // Paste your deployed Google Apps Script Web App URL here (must end in /exec).
   // Deploy > New deployment > Web app > Execute as "Me", Access "Anyone".
-  API_URL: 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwdryWkZ6ofbUc31vqXgC3s2Ir0Yc6rDDJxe8txhLMnVcVVqYOKRNXWhNaHQlN4YXRF/exec',
 
   // Must match API_TOKEN in Api.gs on the Apps Script side.
-  API_TOKEN: 'CHANGE-ME-TO-A-LONG-RANDOM-STRING'
+  API_TOKEN: '3S&k:2`2KB\p|_y@`oUPW)kXBrl@{-xa}fJ)'
 };
 
 // ============================================================
